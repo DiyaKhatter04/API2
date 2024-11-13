@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Compiler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .editor {
+            width: 60%;
+            height: 200px;
+        }
+        .output {
+            width: 60%;
+            height: 100px;
+            background: black;
+            color: white;
+            padding: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Write a program to find factorial of a number</h2>
+
+    <label for="language">Select Language:</label>
+    <select id="language">
+        <option value="0">Python</option>
+        <option value="4">JavaScript</option>
+        <option value="7">C</option>
+        <option value="77">C++</option>
+        <option value="8">Java</option>
+    </select>
+
+    <textarea id="code" class="editor" placeholder="#Write your code"></textarea>
+    <button id="compileBtn">Compile</button>
+
+    <div class="output" id="output">OUTPUT:</div>
+
+    <script>
+        document.getElementById('compileBtn').addEventListener('click', function() {
+    let code = document.getElementById('code').value;
+    let langId = document.getElementById('language').value;
+
+    // Send the POST request to submit the code
+    let postData = {
+        "code": code,
+        "langId": langId
+    };
+
+    fetch('https://codequotient.com/api/executeCode', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.codeId) {
+            // Code successfully submitted, start fetching the result
+            fetchResult(data.codeId);
+        } else {
+            document.getElementById('output').innerHTML = "Error: " + data.error;
+        }
+    })
+    .catch(error => {
+        document.getElementById('output').innerHTML = "Error: " + error.message;
+    });
+});
+
+function fetchResult(codeId) {
+    let interval = setInterval(() => {
+        fetch(`https://codequotient.com/api/codeResult/${codeId}`)
+        .then(response => response.json())
+        .then(result => {
+            let data = JSON.parse(result.data);
+            if (data) {
+                clearInterval(interval);
+                if (data.output) {
+                    document.getElementById('output').innerHTML = "OUTPUT: " + data.output;
+                } else if (data.errors) {
+                    document.getElementById('output').innerHTML = "Errors: " + data.errors;
+                }
+            }
+        })
+        .catch(error => {
+            clearInterval(interval);
+            document.getElementById('output').innerHTML = "Error fetching result: " + error.message;
+        });
+    }, 2000);
+}
+
+    </script>
+</body>
+</html>
